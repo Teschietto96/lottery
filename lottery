@@ -1,0 +1,197 @@
+<?php
+chdir('forum');
+define("IGNORE_BOARD_CLOSED", true);
+define("IN_MYBB", 1);
+require './global.php';
+add_breadcrumb("HabboTravel Fansite - Lotteria", "lotteria.php");
+global $mybb,$db;
+$ldata = array();
+$error = false;
+//SELECT * FROM lotteria A INNER JOIN mybb_userfields B ON A.user = B.ufid
+if(isset($_GET[""]))
+{
+	if($mybb->user['uid'] && intval($_GET["buy"]) >= 0 && intval($_GET["buy"]) <= 199)
+	{
+		$result = $db->query("SELECT * FROM lotteria WHERE user = ".$mybb->user['uid']);
+		if($result->num_rows < 1)
+		{
+			$result2 = $db->query("SELECT * FROM lotteria WHERE id = ".intval($_GET["buy"]));
+			if($result2->num_rows == 0)
+			{
+				$db->query("INSERT INTO lotteria VALUES(".intval($_GET["buy"]).", ".intval($mybb->user['uid']).")");
+				echo "<script>alert('Ticket ".intval($_GET["buy"])." registrato!');</script>";
+				echo '<script>window.history.pushState("object or string", "Title", "'.$_SERVER["SCRIPT_URI"].'");</script>';
+			}
+			else
+				$error = "OOPS! SEMBRA CHE QUALCUNO TI ABBIA PRECEDUTO! SCEGLI UN ALTRO TICKET";
+		}
+		else
+		$error = "NON PUOI PRENDERE ALTRI TICKETS!";	
+	}
+	else
+		$error = "ACCESSO NON EFFETTUATO O SELEZIONE NON VALIDA";
+}
+$result = $db->query("SELECT A.*,B.fid4,fid8,C.username FROM lotteria A INNER JOIN mybb_userfields B INNER JOIN mybb_users C ON A.user = B.ufid AND A.user = C.uid");
+$mytickets = array();
+while($row = $result->fetch_array(MYSQLI_ASSOC)) {
+	$ldata[$row["id"]] = array("uid" => $row["user"], "habbo" => $row["fid4"], "hotel" => $row["fid8"], "username" => $row["username"]);
+	if($row["user"] == $mybb->user['uid'])
+		$mytickets[] = $row["id"];
+}
+
+
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="google-site-verification" content="SMZwrUEB3P9Pi5yAwp8FQJXsZE4j8bxziIFDn9D0b0Q" />
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<title>HabboTravel Fansite - Lotteria</title>
+<?php include("content/headerinclude.php"); ?>
+	<script src="https://habbotravel.com/jscripts/jquery.countdown.min.js"></script>
+<style>
+#lookfriends {
+background : url("https://habbotravel.com/images/profile/searchbar.png");
+border : none;
+height: 23px;
+width: 190px;
+padding:0px 5px 2px 5px;
+margin-bottom: 5px;
+float:left;
+}
+#search {
+background : url("https://habbotravel.com/images/profile/button_search.png") top;
+height: 25px;
+width: 28px
+cursor: pointer;
+float: left;
+margin-left: 4px;
+}
+#search:hover {
+background-position: center;
+}
+#search:active {
+background-position: bottom;
+}  
+</style>
+</head>
+<body>
+<?php include("content/header.php"); ?>
+  <center><img src="https://i.imgur.com/p3GipD7.png" /><br /><br />
+</center>
+
+	
+	
+
+<?php if($error){?><div class="mainboxred_topleft"><div class="mainboxred_topright"></div></div><div class="mainboxred_midleft"><div class="mainboxred_midright"><center><b><?php echo $error; ?></b></center></div></div><div class="mainboxred_botleft"><div class="mainboxred_botright"></div></div><?php } ?>
+
+  <div id="result">
+	    <div class="mainbox_topleft"><div class="mainbox_topright"></div></div>
+	<div class="mainbox_midleft"><div class="mainbox_midright">
+	<table cellpadding="0" cellspacing="0"><tr><td><div>
+	<div style="height:65px;width:297px;float:left;margin-right:3px;" class="profile" >
+		<div class="mainbox_topleft">
+			<div class="mainbox_topright"></div>
+		</div>
+		<div class="mainbox_midleft">
+			<div class="mainbox_midright" style="padding:0;">
+				<table cellspacing="0" cellpadding="0">
+		  			<tr>
+			  			<td>
+				  			<div style="width:45px;height:48px;background:url(https://habbotravel.com/images/image_ticket_1.png) no-repeat;background-position: center center;"></div>
+			  			</td>
+			  			<td style="font-size:11px">
+							<br /><?php if (count($mytickets) > 0) { ?><b>Il tuo ticket è il: </b> <?php echo implode(" - ", $mytickets);?><?php } else {?><b>Nessuna selezione effettuata</b><?php } ?><br /><br />
+						</td>
+					</tr>
+				</table>
+    		</div>
+		</div>
+		<div class="mainbox_botleft">
+			<div class="mainbox_botright"></div>
+		</div>
+	</div>
+	<div style="height:65px;width:297px;float:left;margin-right:3px;" class="profile" >
+		<div class="mainbox_topleft">
+			<div class="mainbox_topright"></div>
+		</div>
+		<div class="mainbox_midleft">
+			<div class="mainbox_midright" style="padding:0;">
+				<table cellspacing="0" cellpadding="0">
+		  			<tr>
+			  			<td>
+				  			<div style="width:45px;height:48px;background:url(https://i.imgur.com/ZkC0AkQ.png) no-repeat;background-position: center center;"></div>
+			  			</td>
+			  			<td style="font-size:11px">
+							<br /><b>I tickets disponibili sono:</b> <?php echo 200-count($ldata); ?> di 200<br /><br /> 
+						</td>
+					</tr>
+				</table>
+    		</div>
+		</div>
+		<div class="mainbox_botleft">
+			<div class="mainbox_botright"></div>
+		</div>
+	</div>
+	<div style="height:65px;width:297px;float:left;margin-right:3px;" class="profile" >
+		<div class="mainbox_topleft">
+			<div class="mainbox_topright"></div>
+		</div>
+		<div class="mainbox_midleft">
+			<div class="mainbox_midright" style="padding:0;">
+				<table cellspacing="0" cellpadding="0">
+		  			<tr>
+			  			<td>
+				  			<div style="width:45px;height:48px;background:url(https://habbotravel.com/images/image_ticket_3.png) no-repeat;background-position: center center;"></div>
+			  			</td>
+			  			<td style="font-size:11px">
+							<br /><b>Estrazioni tra:</b> <span id="clock"></span><br /><br /> 
+							<script>
+							$('#clock').countdown('2020/06/07 4:30 PM', function(event) {
+	   							$(this).html(event.strftime('%D giorni %H ore %M minuti'));
+ 							});
+							</script>
+						</td>
+					</tr>
+				</table>
+    		</div>
+		</div>
+		<div class="mainbox_botleft">
+			<div class="mainbox_botright"></div>
+		</div>
+	</div>
+
+    <?php
+	for($i=0; $i<=199; $i++)
+	{
+		?>
+    <div style="height:65px;width:147px;float:left;margin-right:3px;" class="profile" ><div class="mainbox_topleft"><div class="mainbox_topright"></div></div><div class="mainbox_midleft"><div class="mainbox_midright" style="padding:0">
+      <table cellspacing="0" cellpadding="0">
+		  <tr>
+			  <td><?php if(array_key_exists($i, $ldata)){?>
+				  <div style="width:45px;height:48px;background:url(https://www.habbo.<?php echo $ldata[$i]["hotel"]; ?>/habbo-imaging/avatarimage?user=<?php echo $ldata[$i]["habbo"]; ?>&amp;direction=2&amp;head_direction=2&amp;gesture=sml);background-position: -12px -15px;"></div>
+				  <?php } else { ?>
+				  <div style="width:45px;height:48px;background:url(https://www.habbotravel.com/images/pwrup_qm.gif) no-repeat;background-position:center center"></div>
+				  <?php } ?>
+			  <td style="font-size:11px">
+				  <b><?php echo $i; ?></b><br>
+				  <?php if(array_key_exists($i, $ldata)){?>
+				  <a href="https://www.habbotravel.com/forum/member.php?action=profile&uid=<?php echo $ldata[$i]["uid"]; ?>">
+					  <?php if(strlen($ldata[$i]["username"]) > 14) echo substr(utf8_decode($ldata[$i]["username"]), 0, 12)."..."; else echo utf8_decode($ldata[$i]["username"]); ?>
+				  </a>
+				  <?php } else { ?>
+				  <a href="<?php echo $_SERVER["SCRIPT_URI"];?>?buy=<?php echo $i ?>">Scegli</a>
+				  <?php } ?>
+				  
+			  </td>
+		  </tr>
+		</table>
+    </div></div><div class="mainbox_botleft"><div class="mainbox_botright"></div></div></div>
+    <?php 
+	} ?>
+    </div></td></tr></table>
+	</div></div>
+	<div class="mainbox_botleft"><div class="mainbox_botright"></div></div>
+  </div>
+
+<?php include("content/footer.php"); ?>
